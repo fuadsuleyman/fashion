@@ -1,0 +1,226 @@
+{% extends "index/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+{% load static %}
+
+
+    <!-- breadcrumb start -->
+    <div class="breadcrumb-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-6">
+                    <div class="page-title">
+                        <h2>cart</h2>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <nav aria-label="breadcrumb" class="theme-breadcrumb">
+                        <ol class="breadcrumb">
+                            <li class="breadcrumb-item"><a href="{% url 'index_page' %}">Home</a></li>
+                            <li class="breadcrumb-item active">cart</li>
+                        </ol>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- breadcrumb End -->
+
+
+    <!--section start-->
+    <section class="cart-section section-b-space">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12">
+                    <table class="table cart-table table-responsive-xs">
+                        <thead>
+                            <tr class="table-head">
+                                <th scope="col">image</th>
+                                <th scope="col">product name</th>
+                                <th scope="col">price</th>
+                                <th scope="col">quantity</th>
+                                <th scope="col">action</th>
+                                <th scope="col">total</th>
+                            </tr>
+                        </thead>
+
+                        {% for item in order.orderitem_set.all %}
+                        <tbody>
+                            <tr class="close-tr">
+                                <td>
+                                    <a href="{% url 'product-detail' item.product.slug %}"><img src="{{item.product.imageURL}}" alt=""></a>
+                                </td>
+                                <td><a href="#">{{item.product.title}}</a>
+                                    <div class="mobile-cart-content row">
+                                        <div class="col-xs-3">
+                                            <div class="qty-box">
+                                                <div class="input-group">
+                                                    <input
+                                                        type="text"
+                                                        name="quantity"
+                                                        class="form-control input-number change-quantity"
+                                                        value="{{item.quantity}}"
+                                                        data-id-patch="{{item.id}}"
+                                                        onchange="confirm_update(event);">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-xs-3">
+                                            <h2 class="td-color">${{item.product.get_price}}</h2>
+                                        </div>
+                                        <div class="col-xs-3">
+                                            <h2 class="td-color"><a href="#" class="icon"><i class="ti-close"></i></a>
+                                            </h2>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <h2 class="price" >${{item.product.get_price}}</h2>
+                                </td>
+                                <td>
+                                    <div class="qty-box">
+                                        <div class="input-group">
+                                            <input
+                                                type="number"
+                                                max="9"
+                                                min="0"
+                                                name="quantity"
+                                                data-id-patch={{item.id}}
+                                                class="form-control input-number change-quantity"
+                                                value="{{item.quantity}}" on
+                                                onchange="confirm_update(event);">
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><a href="#" class="icon" id="delete-order-item"><i data-id={{item.id}} class="ti-close" onclick="confirm_delete(event);"></i></a></td>
+                                <td>
+                                    <h2 class="td-color">{{item.get_total|floatformat:2}}</h2>
+                                </td>
+                            </tr>
+                        </tbody>
+                        {% endfor %}
+                    </table>
+                    <table class="table cart-table table-responsive-md">
+                        <tfoot>
+                            <tr>
+                                <td>total price :</td>
+                                <td>
+                                    <h2 >${{order.get_cart_total|floatformat:2}}</h2>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div class="row cart-buttons">
+                <div class="col-6"><a href="#" class="btn btn-solid">continue shopping</a></div>
+                <div class="col-6"><a href="#" class="btn btn-solid">check out</a></div>
+            </div>
+        </div>
+    </section>
+    <script>
+    let elemA = document.getElementById('delete-order-item');
+    console.log(elemA)
+    // let id = elemA.getAttribute("data-id");
+    
+ 
+    function confirm_delete(e){
+        console.log(e.target)
+        let id = e.target.getAttribute('data-id')
+        console.log(`id delete ${id}`)
+        const url = `http://localhost:8000/api-order/orderItem-delete/${id}/`;
+        // console.log(e.target.closest("tr"))
+        // console.log()
+        e.target.closest("tr").remove()
+
+        e.preventDefault()
+        // console.log(csrftoken)
+        // const url = `http://localhost:8000/api-order/orderItem-delete/${id}/`;
+
+        fetch(url, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': csrftoken 
+            },
+            // body: idd
+
+        })
+        .then(res => res.text()) // or res.json()
+        .then(res => console.log(`deleted ${res}`))
+    
+    }
+    
+    function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    var csrftoken = getCookie('csrftoken');
+
+    const input = document.querySelectorAll('.change-quantity');
+
+    elementTr = document.querySelectorAll('.table-head')
+    console.log(`tr elements: ${elementTr}`)
+
+    console.log(elementTr[0].value)
+
+    function update_total(quantity, price){
+        defVal = 0
+        for (let i = 0; i < input.length; i++){
+            defVal += parseInt(input[i].defaultValue);
+        }
+        return defVal
+    }
+
+    console.log(`total finder: ${update_total(input)}`)
+
+    // console.log(input)
+
+    // console.log(`id is: ${input.dataset.idPatch}`)
+
+    
+    function confirm_update(e){
+        let id_patch = e.target.getAttribute('data-id-patch')
+        const url_patch = `http://localhost:8000/api-order/orderItem-patch/${id_patch}/`;
+
+
+        let parent = e.target.closest("tr")
+        let notes = null;
+        console.log(parent.childNodes)
+        for (var i = 0; i < parent.childNodes.length; i++) {
+            
+            // if (parent.childNodes.nodeName))
+            if (parent.childNodes[i].className == "price") {
+            notes = parent.childNodes[i];
+            console.log(`notes: ${notes}`);
+            break;
+        }        
+        }
+
+        // console.log(e.target)
+        console.log(e.target.value)
+        // console.log(id_patch)
+
+        console.log(e.target.closest("tr"))
+        // e.preventDefault()
+
+        fetch(url_patch, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({
+                quantity: e.target.value
+                })
+        })
+        .then(res => res.text()) // or res.json()
+        .then(res => console.log(`updated ${res}`))
+    }
+
+    </script>
+    <!--section end-->
+
+{% endblock content %}
+
